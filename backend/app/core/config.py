@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
+    cloudflare_account_id: str = ""
+    cloudflare_api_token: str = ""
+
     # Gemini (Google AI Studio) - image generation
     gemini_api_key: str = ""
 

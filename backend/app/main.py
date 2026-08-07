@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,3 +23,7 @@ app.include_router(generations.router, prefix="/api")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
+
+logging.basicConfig(
+    level=logging.INFO
+)

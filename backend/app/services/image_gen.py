@@ -1,68 +1,289 @@
-"""AI image generation service.
+"""
+AI Image Generation Service
 
-Primary provider: Google Gemini 2.5 Flash Image ("Nano Banana") - free tier
-via Google AI Studio API key. Falls back to Pollinations.ai (fully free,
-no API key) if Gemini fails or no key is configured, so the app keeps
-working even if the Gemini free quota runs out for the day.
+Provider priority:
+
+1. Cloudflare Workers AI
+2. Google Gemini fallback
+
+Return:
+raw image bytes
 """
 
+from __future__ import annotations
+
 import base64
-import urllib.parse
+import logging
+import time
 
 import httpx
 
+from google import genai
+from google.genai import types
+
 from app.core.config import settings
 
-POLLINATIONS_BASE = "https://image.pollinations.ai/prompt/"
+
+logger = logging.getLogger(__name__)
 
 
-def _generate_with_gemini(prompt: str, source_image_bytes: bytes | None) -> bytes:
-    from google import genai
-    from google.genai import types
+# =====================================
+# Gemini
+# =====================================
 
-    client = genai.Client(api_key=settings.gemini_api_key)
+def generate_with_gemini(
+    prompt: str,
+    source_image_bytes: bytes | None = None,
+) -> bytes:
 
-    contents: list = [prompt]
+    logger.info("Calling Gemini")
+
+    client = genai.Client(
+        api_key=settings.gemini_api_key
+    )
+
+    contents = [prompt]
+
+
     if source_image_bytes:
         contents.append(
-            types.Part.from_bytes(data=source_image_bytes, mime_type="image/png")
+            types.Part.from_bytes(
+                data=source_image_bytes,
+                mime_type="image/png"
+            )
         )
+
 
     response = client.models.generate_content(
         model="gemini-2.5-flash-image",
         contents=contents,
+        config=types.GenerateContentConfig(
+            response_modalities=["IMAGE"]
+        )
     )
 
+
+    if not response.candidates:
+        raise RuntimeError(
+            "Gemini returned empty response"
+        )
+
+
     for part in response.candidates[0].content.parts:
-        if getattr(part, "inline_data", None) is not None:
+
+        if getattr(part, "inline_data", None):
+
+            logger.info(
+                "Gemini success"
+            )
+
             return part.inline_data.data
 
-    raise RuntimeError("Gemini did not return an image")
+
+    raise RuntimeError(
+        "Gemini no image returned"
+    )
 
 
-def _generate_with_pollinations(prompt: str) -> bytes:
-    encoded_prompt = urllib.parse.quote(prompt)
-    url = f"{POLLINATIONS_BASE}{encoded_prompt}?width=1024&height=1024&nologo=true"
-    with httpx.Client(timeout=60.0) as client:
-        resp = client.get(url)
-        resp.raise_for_status()
-        return resp.content
+
+# =====================================
+# Cloudflare Workers AI
+# =====================================
+
+def generate_with_cloudflare(
+    prompt: str
+) -> bytes:
 
 
-def generate_image(prompt: str, source_image_bytes: bytes | None = None) -> bytes:
-    """Return raw image bytes for the given prompt.
+    logger.info(
+        "Calling Cloudflare Workers AI"
+    )
 
-    Tries Gemini first (if configured); falls back to Pollinations.ai
-    on any failure so the feature stays free and available.
-    """
-    if settings.gemini_api_key:
+
+    url = (
+        "https://api.cloudflare.com/client/v4/accounts/"
+        f"{settings.cloudflare_account_id}"
+        "/ai/run/@cf/bytedance/stable-diffusion-xl-lightning"
+    )
+
+
+    headers = {
+        "Authorization":
+            f"Bearer {settings.cloudflare_api_token}",
+
+        "Content-Type":
+            "application/json"
+    }
+
+
+    payload = {
+        "prompt": prompt
+    }
+
+
+
+    for attempt in range(3):
+
         try:
-            return _generate_with_gemini(prompt, source_image_bytes)
-        except Exception:
-            pass  # fall through to free fallback
 
-    return _generate_with_pollinations(prompt)
+            response = httpx.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=120
+            )
 
 
-def image_bytes_to_base64(data: bytes) -> str:
-    return base64.b64encode(data).decode("utf-8")
+            response.raise_for_status()
+
+
+            content_type = response.headers.get(
+                "content-type",
+                ""
+            )
+
+
+            logger.info(
+                f"Cloudflare response: {content_type}"
+            )
+
+
+
+            # Cloudflare ส่งรูปตรง
+
+            if (
+                "image" in content_type
+                or response.content.startswith(b"\x89PNG")
+                or response.content.startswith(b"\xff\xd8")
+            ):
+
+                logger.info(
+                    "Cloudflare image received"
+                )
+
+                return response.content
+
+
+
+            # Cloudflare ส่ง JSON
+
+            data = response.json()
+
+
+            if not data.get(
+                "success",
+                False
+            ):
+
+                raise RuntimeError(
+                    str(data)
+                )
+
+
+            image_base64 = (
+                data["result"]["image"]
+            )
+
+
+            return base64.b64decode(
+                image_base64
+            )
+
+
+
+        except Exception as e:
+
+            logger.warning(
+                f"Cloudflare attempt {attempt+1} failed"
+            )
+
+            if attempt == 2:
+                raise e
+
+
+            time.sleep(2)
+
+
+
+    raise RuntimeError(
+        "Cloudflare failed"
+    )
+
+
+
+# =====================================
+# Main
+# =====================================
+
+def generate_image(
+    prompt: str,
+    source_image_bytes: bytes | None = None,
+) -> bytes:
+
+
+    # -------------------------------
+    # Cloudflare First
+    # -------------------------------
+
+    if (
+        settings.cloudflare_account_id
+        and settings.cloudflare_api_token
+    ):
+
+
+        try:
+
+            logger.info(
+                "Using Cloudflare"
+            )
+
+
+            return generate_with_cloudflare(
+                prompt
+            )
+
+
+        except Exception as e:
+
+            logger.warning(
+                "Cloudflare failed, fallback Gemini"
+            )
+
+            logger.exception(e)
+
+
+
+    # -------------------------------
+    # Gemini fallback
+    # -------------------------------
+
+
+    if settings.gemini_api_key:
+
+
+        try:
+
+            logger.info(
+                "Using Gemini"
+            )
+
+
+            return generate_with_gemini(
+                prompt,
+                source_image_bytes
+            )
+
+
+        except Exception as e:
+
+            logger.warning(
+                "Gemini failed"
+            )
+
+            logger.exception(e)
+
+
+
+    raise RuntimeError(
+        "No image generation provider available"
+    )

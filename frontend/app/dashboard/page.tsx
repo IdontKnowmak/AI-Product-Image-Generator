@@ -5,12 +5,19 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { RequireAuth } from "../components/RequireAuth";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
-import { api, type Generation } from "../lib/api";
+import { api, getToken, type Generation } from "../lib/api";
 
 const TYPE_LABELS = {
   product_scene: "ตกแต่งฉากสินค้า",
   ad_creative: "ภาพโฆษณา",
 } as const;
+
+function getDownloadUrl(url: string) {
+  return url.replace(
+    "/image/upload/",
+    "/image/upload/fl_attachment/"
+  );
+}
 
 function DashboardContent() {
   const { user, logout } = useAuth();
@@ -23,7 +30,9 @@ function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<Generation[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
 
   async function loadHistory() {
     setLoadingHistory(true);
@@ -36,6 +45,33 @@ function DashboardContent() {
       setLoadingHistory(false);
     }
   }
+
+  async function handleDelete(id: string) {
+  const confirmDelete = confirm(
+    "ต้องการลบรายการนี้ใช่หรือไม่?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    setDeleting(id);
+
+    await api.deleteGeneration(id);
+
+    setHistory((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
+
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "ลบไม่สำเร็จ"
+    );
+  } finally {
+    setDeleting(null);
+  }
+}
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- fetching history on mount is the standard pattern
@@ -54,7 +90,6 @@ function DashboardContent() {
       setError("กรุณาใส่คำอธิบายฉากหรือสไตล์ที่ต้องการ");
       return;
     }
-
     setError(null);
     setSubmitting(true);
     try {
@@ -238,7 +273,36 @@ function DashboardContent() {
                   <p className="mt-1 truncate text-sm text-[var(--foreground)]">
                     {gen.prompt}
                   </p>
-                  {gen.error_message && (
+                  <div className="mt-2 flex gap-2">
+
+                    {gen.result_image_url && (
+                      <a
+                        href={getDownloadUrl(gen.result_image_url)}
+                        className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium"
+                        style={{
+                          background: "var(--accent)",
+                          color: "#14130f",
+                        }}
+                      >
+                        ดาวน์โหลดรูป
+                      </a>
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(gen.id)}
+                      disabled={deleting === gen.id}
+                      className="ml-2 rounded-md px-3 py-1.5 text-xs font-medium"
+                      style={{
+                        background: "#dc2626",
+                        color: "white",
+                      }}
+                    >
+                      {deleting === gen.id ? "กำลังลบ..." : "ลบ"}
+                    </button>
+
+                  </div>
+
+                    {gen.error_message && (
                     <p className="mt-1 text-xs" style={{ color: "var(--danger)" }}>
                       {gen.error_message}
                     </p>

@@ -1,6 +1,16 @@
+# pyright: reportMissingImports=false
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from typing import Annotated
+from fastapi import HTTPException
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    UploadFile
+)
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -84,3 +94,31 @@ def get_generation(
     if not record:
         raise HTTPException(status_code=404, detail="Generation not found")
     return record
+
+@router.delete("/{generation_id}")
+def delete_generation(
+    generation_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = (
+        db.query(Generation)
+        .filter(
+            Generation.id == generation_id,
+            Generation.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not record:
+        raise HTTPException(
+            status_code=404,
+            detail="Generation not found"
+        )
+
+    db.delete(record)
+    db.commit()
+
+    return {
+        "message": "Generation deleted successfully"
+    }

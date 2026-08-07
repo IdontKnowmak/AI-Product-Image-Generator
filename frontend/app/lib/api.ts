@@ -23,6 +23,8 @@ type TokenResponse = {
   user: User;
 };
 
+
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
@@ -84,6 +86,28 @@ export const api = {
       body: form,
     });
   },
-};
+
+  deleteGeneration: async (id: string) => {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/generations/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...(token
+          ? { Authorization: `Bearer ${token}` }
+          : {}),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Delete failed");
+  }
+
+  return response.json();
+},
+}
 
 export { getToken };
