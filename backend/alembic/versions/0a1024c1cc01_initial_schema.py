@@ -31,11 +31,20 @@ def upgrade() -> None:
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
     generation_type_enum = postgresql.ENUM(
-        "product_scene", "ad_creative", name="generation_type"
+        "product_scene",
+        "ad_creative",
+        name="generation_type",
+        create_type=False,
     )
+
     generation_status_enum = postgresql.ENUM(
-        "pending", "completed", "failed", name="generation_status"
+        "pending",
+        "completed",
+        "failed",
+        name="generation_status",
+        create_type=False,
     )
+
     generation_type_enum.create(op.get_bind(), checkfirst=True)
     generation_status_enum.create(op.get_bind(), checkfirst=True)
 
@@ -70,5 +79,15 @@ def downgrade() -> None:
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
 
-    postgresql.ENUM(name="generation_status").drop(op.get_bind(), checkfirst=True)
-    postgresql.ENUM(name="generation_type").drop(op.get_bind(), checkfirst=True)
+    postgresql.ENUM(
+        "pending",
+        "completed",
+        "failed",
+        name="generation_status",
+    ).drop(op.get_bind(), checkfirst=True)
+
+    postgresql.ENUM(
+        "product_scene",
+        "ad_creative",
+        name="generation_type",
+    ).drop(op.get_bind(), checkfirst=True)
