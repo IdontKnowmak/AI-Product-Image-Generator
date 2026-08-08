@@ -30,6 +30,7 @@ function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<Generation[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -114,6 +115,8 @@ function DashboardContent() {
       setSubmitting(false);
     }
   }
+
+  
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
@@ -251,14 +254,21 @@ function DashboardContent() {
                   style={{ background: "var(--surface-2)" }}
                 >
                   {gen.result_image_url ? (
-                    <Image
-                      src={gen.result_image_url}
-                      alt={gen.prompt}
-                      width={96}
-                      height={96}
-                      className="h-full w-full object-cover"
-                      unoptimized
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImage(gen.result_image_url)}
+                      className="h-full w-full cursor-pointer"
+                      title="คลิกเพื่อดูรูปขนาดใหญ่"
+                    >
+                      <Image
+                        src={gen.result_image_url}
+                        alt={gen.prompt}
+                        width={96}
+                        height={96}
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                        unoptimized
+                      />
+                    </button>
                   ) : (
                     <span className="text-xs text-[var(--muted)]">—</span>
                   )}
@@ -313,6 +323,36 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {selectedImage && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    onClick={() => setSelectedImage(null)}
+  >
+    <div
+      className="relative max-h-[90vh] max-w-[90vw]"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => setSelectedImage(null)}
+        className="absolute -right-3 -top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-lg"
+        aria-label="ปิด"
+      >
+        ✕
+      </button>
+
+            <Image
+              src={selectedImage}
+              alt="รูปภาพขนาดใหญ่"
+              width={1200}
+              height={1200}
+              className="max-h-[90vh] w-auto rounded-xl object-contain"
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
     </main>
   );
 }
