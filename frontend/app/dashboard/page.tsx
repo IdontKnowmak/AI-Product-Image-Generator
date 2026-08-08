@@ -209,7 +209,7 @@ function DashboardContent() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
-              placeholder="เช่น วางบนโต๊ะไม้ในคาเฟ่ แสงธรรมชาติยามเช้า บรรยากาศอบอุ่น"
+              placeholder="แนะนำให้เขียน Prompt เป็นภาษาอังกฤษ เช่น “Place the product on a wooden table in a cozy café with warm morning sunlight.”"
               className="mt-1.5 w-full rounded-lg border bg-transparent px-3 py-2.5 text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)]"
               style={{ borderColor: "var(--border)" }}
             />
