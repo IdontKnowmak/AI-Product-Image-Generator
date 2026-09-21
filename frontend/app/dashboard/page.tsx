@@ -316,10 +316,10 @@ function DashboardContent() {
                     </span>
                     <StatusBadge status={gen.status} />
                   </div>
-                  <p className="mt-1 truncate text-sm text-[var(--foreground)]">
+                  <p className="mt-1 line-clamp-2 max-w-full break-words text-sm leading-5 text-[var(--foreground)]">
                     {gen.prompt}
                   </p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
 
                     {gen.result_image_url && (
                       <button
@@ -355,7 +355,7 @@ function DashboardContent() {
                     <button
                       onClick={() => handleDelete(gen.id)}
                       disabled={deleting === gen.id}
-                      className="ml-2 rounded-md px-3 py-1.5 text-xs font-medium"
+                      className="rounded-md px-3 py-1.5 text-xs font-medium"
                       style={{
                         background: "#dc2626",
                         color: "white",
