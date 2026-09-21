@@ -17,6 +17,7 @@ class GenerationOut(BaseModel):
     prompt: str
     source_image_url: str | None = None
     result_image_url: str | None = None
+    is_public: bool = False
     status: GenerationStatus
     error_message: str | None = None
     created_at: datetime

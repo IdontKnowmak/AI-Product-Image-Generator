@@ -2,11 +2,15 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.community import GenerationComment, GenerationLike, SavedGeneration
 
 
 class GenerationStatus(str, PyEnum):
@@ -46,5 +50,9 @@ class Generation(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false", index=True)
 
     user: Mapped["User"] = relationship(back_populates="generations")
+    likes: Mapped[list["GenerationLike"]] = relationship(back_populates="generation", cascade="all, delete-orphan")
+    comments: Mapped[list["GenerationComment"]] = relationship(back_populates="generation", cascade="all, delete-orphan")
+    saved_by: Mapped[list["SavedGeneration"]] = relationship(back_populates="generation", cascade="all, delete-orphan")

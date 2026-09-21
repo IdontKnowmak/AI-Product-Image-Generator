@@ -35,8 +35,37 @@ export type Generation = {
   result_image_url: string | null;
   status: "pending" | "completed" | "failed";
   error_message: string | null;
+  is_public: boolean;
   created_at: string;
 };
+
+export type CommunityComment = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  content: string;
+  created_at: string;
+};
+
+export type CommunityImage = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  generation_type: string;
+  prompt: string;
+  result_image_url: string;
+  created_at: string;
+  like_count: number;
+  comment_count: number;
+  save_count: number;
+  liked: boolean;
+  saved: boolean;
+  comments?: CommunityComment[];
+};
+
+export type CommunityDetail = CommunityImage & { comments: CommunityComment[] };
+
+type ToggleResult = { active: boolean; count: number };
 
 type TokenResponse = {
   access_token: string;
@@ -121,6 +150,26 @@ export const api = {
 
   adminDeleteGeneration: (id: string) =>
     request<{ message: string }>(`/api/admin/generations/${id}`, { method: "DELETE" }),
+
+  setGenerationVisibility: (id: string, isPublic: boolean) =>
+    request<Generation>(`/api/generations/${id}/visibility?is_public=${isPublic}`, { method: "PATCH" }),
+
+  communityImages: (sort: "newest" | "popular" = "newest") =>
+    request<CommunityImage[]>(`/api/community?sort=${sort}`),
+
+  communityImage: (id: string) => request<CommunityDetail>(`/api/community/${id}`),
+
+  communityLike: (id: string) => request<ToggleResult>(`/api/community/${id}/like`, { method: "POST" }),
+
+  communitySave: (id: string) => request<ToggleResult>(`/api/community/${id}/save`, { method: "POST" }),
+
+  communityComment: (id: string, content: string) =>
+    request<CommunityComment>(`/api/community/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    }),
+
+  savedImages: () => request<CommunityImage[]>("/api/community/saved/list"),
 
   deleteGeneration: async (id: string) => {
   const token = getToken();

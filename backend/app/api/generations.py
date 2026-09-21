@@ -95,6 +95,27 @@ def get_generation(
         raise HTTPException(status_code=404, detail="Generation not found")
     return record
 
+@router.patch("/{generation_id}/visibility")
+def set_generation_visibility(
+    generation_id: uuid.UUID,
+    is_public: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = db.query(Generation).filter(
+        Generation.id == generation_id,
+        Generation.user_id == current_user.id,
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Generation not found")
+    if record.status != GenerationStatus.completed or not record.result_image_url:
+        raise HTTPException(status_code=400, detail="Only completed images can be shared")
+    record.is_public = is_public
+    db.commit()
+    db.refresh(record)
+    return record
+
+
 @router.delete("/{generation_id}")
 def delete_generation(
     generation_id: uuid.UUID,
