@@ -18,6 +18,8 @@ class UserOut(BaseModel):
     id: uuid.UUID
     email: EmailStr
     full_name: str | None = None
+    role: str
+    is_active: bool
 
     class Config:
         from_attributes = True

@@ -34,6 +34,8 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is disabled")
 
     token = create_access_token(subject=str(user.id))
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))

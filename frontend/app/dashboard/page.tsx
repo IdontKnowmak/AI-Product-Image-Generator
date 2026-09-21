@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { RequireAuth } from "../components/RequireAuth";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
-import { api, getToken, type Generation } from "../lib/api";
+import { api, type Generation } from "../lib/api";
 
 const TYPE_LABELS = {
   product_scene: "ตกแต่งฉากสินค้า",
@@ -134,6 +134,11 @@ function DashboardContent() {
         </div>
         <div className="text-right">
           <p className="text-sm text-[var(--foreground)]">{user?.email}</p>
+          {user?.role === "admin" && (
+            <a href="/admin" className="mr-3 text-xs text-[var(--accent)] hover:underline">
+              ระบบหลังบ้าน
+            </a>
+          )}
           <button
             onClick={logout}
             className="text-xs text-[var(--muted)] hover:text-[var(--accent)]"

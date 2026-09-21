@@ -4,6 +4,27 @@ export type User = {
   id: string;
   email: string;
   full_name: string | null;
+  role: string;
+  is_active: boolean;
+};
+
+export type AdminDashboard = {
+  users: number;
+  active_users: number;
+  generations: number;
+  completed: number;
+  failed: number;
+  today_generations: number;
+};
+
+export type AdminUser = User & {
+  created_at: string;
+  generation_count: number;
+};
+
+export type AdminGeneration = Generation & {
+  user_id: string;
+  user_email: string;
 };
 
 export type Generation = {
@@ -86,6 +107,20 @@ export const api = {
       body: form,
     });
   },
+
+  adminDashboard: () => request<AdminDashboard>("/api/admin/dashboard"),
+
+  adminUsers: () => request<AdminUser[]>("/api/admin/users"),
+
+  adminSetUserStatus: (id: string, isActive: boolean) =>
+    request<{ message: string; is_active: boolean }>(`/api/admin/users/${id}/status?is_active=${isActive}`, {
+      method: "PATCH",
+    }),
+
+  adminGenerations: () => request<AdminGeneration[]>("/api/admin/generations"),
+
+  adminDeleteGeneration: (id: string) =>
+    request<{ message: string }>(`/api/admin/generations/${id}`, { method: "DELETE" }),
 
   deleteGeneration: async (id: string) => {
   const token = getToken();

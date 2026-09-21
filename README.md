@@ -31,7 +31,7 @@ cd .. && docker compose up -d db
 cd backend
 alembic upgrade head            # สร้างตารางในฐานข้อมูล
 uvicorn app.main:app --reload   # รันที่ http://localhost:8000
-```
+```s
 
 ### 2. Frontend
 

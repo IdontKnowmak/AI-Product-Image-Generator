@@ -24,7 +24,16 @@ def get_current_user(
         raise unauthorized
 
     user = db.get(User, user_id)
-    if user is None:
+    if user is None or not user.is_active:
         raise unauthorized
 
     return user
+
+
+def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user
