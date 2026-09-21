@@ -24,7 +24,7 @@ export default function Home() {
       <section className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.05fr_.95fr] lg:pb-24 lg:pt-20">
         <div>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--muted)" }}>
-            <span style={{ color: "var(--accent)" }}>●</span> AI Image Generator · Studio + Community
+            <span style={{ color: "var(--accent)" }}>●</span> AI Image Generator · Studio and Community
           </div>
           <h1 className="max-w-3xl text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl" style={{ fontFamily: "var(--font-display)", fontWeight: 500 }}>
             สร้างภาพสินค้า
@@ -37,9 +37,6 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link href="/register" className="rounded-full px-7 py-3.5 text-sm font-medium text-[#14130f] shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl" style={{ background: "var(--accent)" }}>✦ สร้างภาพแรกของฉัน</Link>
             <Link href="/login" className="rounded-full border px-6 py-3.5 text-sm font-medium transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>มีบัญชีแล้ว · เข้าสู่ระบบ</Link>
-          </div>
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[var(--muted)]">
-            <span>✓ สร้างภาพด้วย AI</span><span>✓ เลือก Public / Private</span><span>✓ Like · Comment · Save</span>
           </div>
         </div>
         <div className="relative mx-auto w-full max-w-lg">
