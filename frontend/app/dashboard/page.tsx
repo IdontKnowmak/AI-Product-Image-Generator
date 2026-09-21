@@ -132,19 +132,47 @@ function DashboardContent() {
             สร้างภาพสินค้า
           </h1>
         </div>
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-3">
           <p className="text-sm text-[var(--foreground)]">{user?.email}</p>
-          {user?.role === "admin" && (
-            <a href="/admin" className="mr-3 text-xs text-[var(--accent)] hover:underline">
-              ระบบหลังบ้าน
+          <nav className="flex flex-wrap justify-end gap-2" aria-label="เมนูหลัก">
+            <a
+              href="/dashboard"
+              className="rounded-full border px-4 py-2 text-sm font-medium shadow-sm transition-all hover:-translate-y-0.5"
+              style={{ borderColor: "var(--accent)", background: "var(--accent)", color: "#14130f" }}
+            >
+              ✦ Studio
             </a>
-          )}
-          <button
-            onClick={logout}
-            className="text-xs text-[var(--muted)] hover:text-[var(--accent)]"
-          >
-            ออกจากระบบ
-          </button>
+            <a
+              href="/community"
+              className="rounded-full border px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              ✦ Community
+            </a>
+            <a
+              href="/saved"
+              className="rounded-full border px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              ♡ บันทึก
+            </a>
+            {user?.role === "admin" && (
+              <a
+                href="/admin"
+                className="rounded-full border px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                ⚙ หลังบ้าน
+              </a>
+            )}
+            <button
+              onClick={logout}
+              className="rounded-full border px-4 py-2 text-sm font-medium transition-all hover:-translate-y-0.5 hover:border-[var(--danger)] hover:text-[var(--danger)]"
+              style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+            >
+              ออกจากระบบ
+            </button>
+          </nav>
         </div>
       </div>
 
@@ -238,7 +266,10 @@ function DashboardContent() {
 
         {/* Gallery / history */}
         <div>
-          <h2 className="text-sm text-[var(--muted)]">ประวัติการสร้างภาพ</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm text-[var(--muted)]">ประวัติการสร้างภาพ</h2>
+            <span className="text-xs text-[var(--muted)]">เลือกเพื่อแชร์ใน Community</span>
+          </div>
           <div className="mt-3 space-y-4">
             {loadingHistory && (
               <p className="text-sm text-[var(--muted)]">กำลังโหลด...</p>
@@ -289,6 +320,24 @@ function DashboardContent() {
                     {gen.prompt}
                   </p>
                   <div className="mt-2 flex gap-2">
+
+                    {gen.result_image_url && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const updated = await api.setGenerationVisibility(gen.id, !gen.is_public);
+                            setHistory((prev) => prev.map((item) => item.id === gen.id ? updated : item));
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "เปลี่ยนสถานะการแชร์ไม่สำเร็จ");
+                          }
+                        }}
+                        className="rounded-md border px-3 py-1.5 text-xs font-medium"
+                        style={{ borderColor: gen.is_public ? "var(--accent)" : "var(--border)", color: gen.is_public ? "var(--accent)" : "var(--muted)" }}
+                      >
+                        {gen.is_public ? "◉ สาธารณะ" : "○ ส่วนตัว"}
+                      </button>
+                    )}
 
                     {gen.result_image_url && (
                       <a
