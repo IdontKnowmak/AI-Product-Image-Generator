@@ -142,11 +142,11 @@ function CommunityContent() {
           <p className="mt-2 text-sm text-[var(--muted)]">กลับไป Studio แล้วเลือก “สาธารณะ” ในภาพที่ต้องการแชร์</p>
         </div>
       ) : (
-        <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 xl:columns-4">
+        <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {images.map((image) => (
-            <article key={image.id} className="mb-5 break-inside-avoid overflow-hidden rounded-2xl border" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+            <article key={image.id} className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
               <button type="button" onClick={() => openImage(image)} className="block w-full text-left">
-                <Image src={image.result_image_url} alt={image.prompt} width={700} height={900} className="h-auto w-full object-cover" unoptimized />
+                <Image src={image.result_image_url} alt={image.prompt} width={900} height={900} className="aspect-square h-auto w-full object-cover" unoptimized />
               </button>
               <div className="p-4">
                 <p className="text-sm font-medium">{image.user_name}</p>
