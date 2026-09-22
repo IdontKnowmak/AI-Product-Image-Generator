@@ -30,7 +30,9 @@ cd .. && docker compose up -d db
 
 cd backend
 alembic upgrade head            # สร้างตารางในฐานข้อมูล
-uvicorn app.main:app --reload   # รันที่ http://localhost:8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000   # รองรับการเข้าจากเครื่องอื่นในเครือข่ายเดียวกัน
+
+# จากเครื่องอื่น ให้เปิด Frontend ด้วย IP ของเครื่องนี้ เช่น http://192.168.1.10:3000
 ```s
 
 ### 2. Frontend
@@ -39,7 +41,7 @@ uvicorn app.main:app --reload   # รันที่ http://localhost:8000
 cd frontend
 cp .env.local.example .env.local
 npm install
-npm run dev                     # รันที่ http://localhost:3000
+npm run dev                     # รันที่ http://<IP-เครื่องนี้>:3000 เพื่อให้เครื่องอื่นในเครือข่ายเข้าถึงได้
 ```
 
 ## ตัวแปรที่ต้องตั้งค่า (.env ของ backend)
@@ -50,7 +52,7 @@ npm run dev                     # รันที่ http://localhost:3000
 | `JWT_SECRET` | จำเป็น | สุ่ม string ยาวๆ เช่น `openssl rand -hex 32` |
 | `GEMINI_API_KEY` | แนะนำ (ไม่ใส่ก็ใช้ fallback ฟรีได้) | https://aistudio.google.com/apikey (ฟรี ไม่ต้องผูกบัตร) |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | จำเป็น | https://cloudinary.com/console (ฟรี 25GB) |
-| `FRONTEND_ORIGIN` | จำเป็น | URL ของ frontend เช่น `https://your-app.vercel.app` |
+| `FRONTEND_ORIGIN` | จำเป็น | URL ของ frontend เช่น `https://your-app.vercel.app` (หลาย URL คั่นด้วย `,` ได้) |
 
 **หมายเหตุเรื่อง AI**: ระบบเรียก Gemini 2.5 Flash Image (Nano Banana) เป็นหลัก ถ้าไม่ได้ตั้งค่า `GEMINI_API_KEY` หรือโควตาฟรีของ Gemini หมดในวันนั้น ระบบจะ fallback ไปใช้ Pollinations.ai ซึ่งฟรีไม่จำกัดและไม่ต้องมี API key โดยอัตโนมัติ
 
@@ -103,6 +105,8 @@ git push -u origin main
 ### ขั้นตอนที่ 7 — เชื่อมกลับ
 
 กลับไปที่ Render → แก้ env `FRONTEND_ORIGIN` เป็น URL ของ Vercel ที่ได้ (เพื่อให้ CORS อนุญาต) → redeploy backend
+
+**หมายเหตุสำหรับการทดสอบจากเครื่องอื่นใน LAN**: ให้เปิด Frontend ด้วย IP ของเครื่องที่รันโปรเจกต์ เช่น `http://192.168.1.10:3000` และตั้ง `FRONTEND_ORIGIN=http://192.168.1.10:3000` ใน `backend/.env` จากนั้นเปิดพอร์ต `3000` และ `8000` ใน Windows Firewall หากระบบถามสิทธิ์
 
 **เสร็จแล้ว** — เปิด URL ของ Vercel เพื่อทดสอบระบบทั้งหมด: สมัครสมาชิก → login → อัปโหลดรูปสินค้า → สร้างภาพ
 

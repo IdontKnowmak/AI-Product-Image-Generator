@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     cloudinary_api_secret: str = ""
 
     # CORS
-    frontend_origin: str = "http://localhost:3000"
+    # Comma-separated frontend origins, e.g. http://localhost:3000,http://192.168.1.10:3000
+    frontend_origin: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     model_config = SettingsConfigDict(
         env_file=".env",
